@@ -1,7 +1,5 @@
 FROM python:3.6-slim
 
-ARG maxmind_key
-
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     g++ \
@@ -10,7 +8,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     patch \
     git \
     qemu \
-    qemu-system \
     openvpn \
     binutils \
     iprange \
@@ -28,6 +25,7 @@ COPY --chown=lisa:lisa ./data /home/lisa/data
 COPY --chown=lisa:lisa ./docker /home/lisa/docker
 COPY --chown=lisa:lisa ./lisa /home/lisa/lisa
 COPY --chown=lisa:lisa ./requirements.txt /home/lisa/requirements.txt
+COPY --chown=lisa:lisa ./tests /home/lisa/tests
 
 ENV PYTHONPATH /home/lisa
 
@@ -35,7 +33,11 @@ WORKDIR /home/lisa
 
 RUN pip install -r requirements.txt \
     && iprange -j data/blacklists/* > data/ipblacklist \
-    && ./docker/worker/maxmind.sh $maxmind_key \
+    && echo "Downloading MaxMind GeoLite databases ..." \
+    && wget https://geolite.maxmind.com/download/geoip/database/GeoLite2-City.tar.gz -q -O - | tar xz -C data/geolite2databases \
+    && wget https://geolite.maxmind.com/download/geoip/database/GeoLite2-ASN.tar.gz -q -O - | tar xz -C data/geolite2databases \
+    && mv $(find ./data -name GeoLite2-City.mmdb) ./data/geolite2databases \
+    && mv $(find ./data -name GeoLite2-ASN.mmdb) ./data/geolite2databases \
     && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
     git \
     gcc \
@@ -45,4 +47,6 @@ RUN pip install -r requirements.txt \
     && rm -rf /var/lib/apt/lists/* \
     && rm -rf /radare2/.git
 
-CMD ["./docker/worker/init.sh"]
+USER lisa
+
+CMD ["pytest", "tests"]

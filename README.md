@@ -16,6 +16,7 @@ Project providing automated Linux malware analysis on various CPU architectures.
 - [Adding new sub-analysis modules](#adding-new-sub-analysis-modules)
 - [Upcoming features](#upcoming-features)
 - [Contribute](#contribute)
+- [Related work](#related-work)
 - [License](#license)
 
 ![LiSa](web_frontend/lisa.gif)
@@ -53,13 +54,36 @@ $ cd lisa
 # docker-compose build
 ```
 
-3. Profit.
+3. Run the sandbox (default location: http://localhost:4242).
 
 ```
 # docker-compose up
 ```
 
 ## Configuration
+
+### MaxMind GeoLite2
+
+[Sign up](https://www.maxmind.com/en/geolite2/signup) to get your API key. Use API key in docker-compose.yml build args section.
+
+```
+.
+.
+  worker:
+    image: lisa-worker
+    build:
+      context: .
+      dockerfile: ./docker/worker/Dockerfile
+      args:
+        maxmind_key: YOUR_KEY
+    volumes:
+      - "./data/storage:/home/lisa/data/storage"
+      .
+      .
+      .
+.
+.
+```
 
 ### Web hosting
 
@@ -154,6 +178,13 @@ analyzers_config = [
 
 ```
 
+## Running tests
+
+```
+# docker build -f ./docker/tests/Dockerfile -t lisa-tests .
+# docker run lisa-tests
+```
+
 ## Upcoming features
 
 1. **YARA module** - YARA module to match patterns in LiSa's JSON output.
@@ -162,6 +193,12 @@ analyzers_config = [
 ## Contribute
 
 Contributions | feedback | issues | pull requests are welcome.
+
+## Related work
+
+- [LiSa - Multiplatform Linux Sandbox for Analyzing IoT Malware](http://excel.fit.vutbr.cz/submissions/2019/058/58.pdf)
+- [Understanding Linux Malware](http://www.s3.eurecom.fr/~yanick/publications/2018_oakland_linuxmalware.pdf)
+- [LiSa. Linux Sand Box with Chad Seaman and Johnathan Respeto](https://www.youtube.com/watch?v=qed7ZnnkxZM)
 
 ## License
 
